@@ -1,0 +1,52 @@
+log_file: logs/wishlist.log
+pg_credentials:
+  user: colldev
+  password: colldev
+  host: localhost
+  port: 5432
+  database: alma_dashboard
+analytics:
+  api_key: l7xxb5f33ddb619d4b8a96d8d8c83fc355c7
+  base_url: https://api-na.hosted.exlibrisgroup.com
+  get_url: /almaws/v1/analytics/reports
+  path: '?path=%2Fshared%2FThe George Washington University%2Fcollections_dashboard%2F'
+  report_names: 
+    - invoice_line_table
+    - pol_table
+    - transactions_table
+    - funds_table
+acquisitions:
+  api_key: l7xxe2cc25d82e8c4bf8b76c49183568021f
+  base_url: 'https://api-na.hosted.exlibrisgroup.com/almaws/v1/acq/funds'
+fiscal_period:
+  start_date: 07-01-2019
+  end_date: 06-30-2020
+  last_valid_renewal: 07-30-2020
+sql:
+  dates_view: dates_view.sql
+  expenditures_view: expenditures_view.sql
+  encumbrances_view: encumbrances_view.sql
+airtable:
+  rate_limit: 5
+  api_key: key7qUZ4utiZddVza
+  base_url: https://api.airtable.com/v0/appbYQNC3j8KsjV2L/{table_name}
+  fund_table_col_map:
+    fiscal_period_description: fiscal_period_description
+    fund_ledger_code: fund_ledger_code
+    fund_ledger_name: fund_ledger_name
+    parent_fund_ledger_name: parent_fund_ledger_name
+    ledger_name: ledger_name
+    balance_available: alma_balance_available
+  ledger_names: 
+    - '103204'
+    - '103206'
+    - '103210'
+  fund_names:
+    - Wishlist Onetime
+  sql:
+    update_at_funds: update_at_funds.sql
+  funds_table_fields:
+    - fund_ledger_code
+    - fund_ledger_name
+    - ledger_name
+    - total_allocated

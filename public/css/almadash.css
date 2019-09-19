@@ -1,0 +1,36 @@
+.xaxis path, .yaxis path, .xaxis line, .yaxis line {
+				fill: none;
+				stroke-width: 1;
+				stroke: black;
+			}
+			.actual-line {
+  				fill: none;
+  				stroke: steelblue;
+  				stroke-width: 2.5;
+				}
+			.projected-line {
+				fill: none;
+				stroke: steelblue;
+				stroke-width: 2.5;
+				stroke-dasharray: 3;
+			}
+			.proposed-line {
+				fill: none;
+				stroke: red;
+				stroke-width: 3;
+				stroke-dasharray: 5;
+				stroke-opacity: 0.25;
+			}
+			.legendText {
+				stroke: black;
+			}
+			.tick line{
+				opacity: 0.2;
+			}
+			
+			.title {
+     			margin: 0 auto;
+     			width: 500px; 
+     			font-weight: bold;
+     			font-size: 14pt;
+			}
