@@ -5,6 +5,20 @@
 		<link href="css/almadash.css" rel="stylesheet">
 	</head>
 	<body>
+		<div class="metadata">
+			<div id="title-box" class="title-box">
+				<h3 class="title">Funds, Orders, and Wishlist Orders</h3>
+			</div>
+			<div id="description" class="description">
+				<p>Current fund and order information, <strong>except for balance available</strong>, is drawn from Alma Analytics. Balance available for funds is drawn from the Alma Funds API. Wishlist orders and wishlist balance available are drawn from Airtable.</p>
+				<p>Actual spend represents expenditures in Alma (invoiced orders). Projected spend represents encumbered orders; for subscriptions, renewal date is used as a proxy for projected spend date. Proposed spend represents wishlist items not yet ordered.</p>
+				<div class="data-refresh">
+					<h4>Last data refresh</h4>
+					<ul id="data-refresh-list" class="data-refresh-list">
+					</ul>
+				</div>
+			</div>
+		</div>
 		<div class="chart-container">
 			<div id="chart" class="chart-body">
 			</div>

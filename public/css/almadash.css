@@ -28,9 +28,27 @@
 				opacity: 0.2;
 			}
 			
-			.title {
-     			margin: 0 auto;
-     			width: 500px; 
-     			font-weight: bold;
-     			font-size: 14pt;
+			.metadata {
+     			width: 800px; 
+     			position: relative;
+     			left: 30px;
+     			font-size: 11pt;
+			}
+			.metadata h3 {
+				font-size: 18pt;
+			}
+			.chart-container {
+				position: relative;
+				left: 10px;
+			}
+			.data-refresh {
+				font-size: 10pt;
+			}
+			.data-refresh h4 {
+				font-size: 11pt;
+			}
+			.handsontable table thead th {
+  				white-space: pre-line;
+  				max-width: 150;
+  				vertical-align: bottom;/* enter here your max header width */
 			}

@@ -7,6 +7,15 @@ module.exports = {
   					"port": 5432
 					},
 	"queries": {
+        "refresh_ts_query": `select distinct timestamp, 'Funds' as tablename
+                            from funds_table
+                            union all
+                            select distinct timestamp, 'Orders' as tablename
+                            from pol_table
+                            union all
+                            select distinct timestamp, 'Wishlist' as tablename
+                            from airtable_funds
+                            `,
 				"orders_query": `select (case
                                   when (pol_table.renewal_date is not null) and
                                        (pol_table.po_line_creation_date < pol_table.fiscal_period_start_date)

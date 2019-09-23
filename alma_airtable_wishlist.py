@@ -231,6 +231,8 @@ def load_analytics_data(reports):
         engine.execute(drop_query.format(table_name=r))
     for name, table in reports.items():
         try:
+            # Add timestamp
+            table['timestamp'] = datetime.datetime.today()
             table.to_sql(name, engine, 
                  if_exists='replace',
                  index=False)
@@ -390,6 +392,8 @@ def fetch_new_orders(wishlist_funds_table, orders_url, allocations_url, headers)
                            suffixes=('', '_merge'))
         # Remove the extraneous columns
         wishlist_orders_table = wishlist_orders_table.drop([c for c in wishlist_orders_table.columns if c.endswith('merge')], axis=1)    
+        # Add timestamp
+        wishlist_orders_table['timestamp'] = datetime.datetime.today()
         # Save to the postgres db
         return wishlist_orders_table.to_sql('wishlist_orders_table', engine, if_exists='replace', index=False)
     except Exception as e:
@@ -447,6 +451,7 @@ def do_airtable_updates(reports, init=False):
     try:
         # Load the fund information and associated Airtable id's for use in updating
         airtable_funds = convert_airtable_results(airtable_funds)
+        airtable_funds['timestamp'] = datetime.datetime.today()
         airtable_funds.to_sql('airtable_funds', engine, if_exists='replace', index=False)
     except Exception as e:
         wishlist_log.error('Error loading Airtable funds to postgres: {}'.format(e))

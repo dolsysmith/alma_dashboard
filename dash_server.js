@@ -14,7 +14,7 @@ const logger = createLogger({
     ),
   defaultMeta: {service: 'user-service'},
   transports: [
-    new transports.File({ filename: 'error.log', 
+    new transports.File({ filename: '.logs/dash_server.log', 
     	level: 'error',
     	timestamp: true })  ]
 });
@@ -32,7 +32,6 @@ async function getTable (query, params=null) {
 	}
 	catch (e) {
 		logger.error(e);
-		//console.log(e);
 	}
 }
 
@@ -60,6 +59,11 @@ app.get('/orders-data', async (req, res) => {
 // Endpoint for AJAX request for fund data
 app.get('/funds-data', async (req, res) => {
 	let data = await getTable(config.queries.funds_query);
+	res.send(data);
+});
+// Endpoint for refresh timestamp data
+app.get('/timestamp-data', async (req, res) => {
+	let data = await getTable(config.queries.refresh_ts_query);
 	res.send(data);
 });
 /* Endpoint for AJAX request for burndown (timeseries) data

@@ -13,8 +13,8 @@ const ordersColumnMap = new Map([['Order Type', 'order_type'],
 						['Vendor', 'vendor_code'],
 						['Fund Name', 'enc_fund_names'],
 						['Fund Code', 'enc_fund_codes'],
-						['Total Encumbered', 'encumbrance_amount'],
-						['Total Spent', 'expenditure_amount'],
+						['Amount Projected / Proposed', 'encumbrance_amount'],
+						['Amount Spent', 'expenditure_amount'],
 						['Invoice Status', 'invoice_status']]);
 
 const fundsColumnMap = new Map([['Ledger', 'ledger_name'],
@@ -28,7 +28,7 @@ const tableProps = [{endPoint: 'funds-data',  // server endpoint to retrieve dat
 						elementId: 'funds-table', // HTML ID of container
 						columnMap: fundsColumnMap, // mapping db columns to table view
 						renderAllRows: false, // turn off for better performance
-						width: 1000, 		// need to set both width and height -- if height is not set, table is rendered to fill the browser window
+						width: 800, 		// need to set both width and height -- if height is not set, table is rendered to fill the browser window
 						height: 400,
 						hiddenColumns: {columns: [2]}, // hiding the fund code column, which is the key we use for db queries
 						hooks: {afterSelectionEndByProp: fundSelectionListener} // listens for the user's selection of a cell on the table
@@ -58,6 +58,8 @@ const valueFunctions = {actual: (d) => d.total_alloc - d.daily_exp,
 						projected: (d) => d.total_alloc - (d.daily_exp + d.daily_enc),
 						proposed: (d) => d.total_alloc - (d.daily_exp + d.daily_enc + d.wishlist_proposed)
 					};
+// d3 time formatting utility, for use with data refresh timestamps
+const formatTime = d3.timeFormat('%B %d, %Y');
 
 function populateTable(data, props) {
 	/* Sets up a handsontable instance. Code below is mostly boilerplate. */
@@ -281,6 +283,8 @@ function setupChart(chartProps) {
 		// Move the next one down by a fixed amount
 		legendY += 20;	
 	}
+
+	displayMetadata();
 	
 	return [y, yAxisFunc, linesObj];
 
@@ -291,6 +295,25 @@ function updateYAxis(y, yAxisFunc, maxAmount) {
 	y.domain([0, maxAmount]);
 	
 	d3.select('.yaxis').call(yAxisFunc);
+}
+
+function displayMetadata() {
+	/* Fetch stored timestamp for last data update on server side.*/
+	fetch('timestamp-data')
+		.then(response => response.json())
+		.then(data => {
+			d3.select('#data-refresh-list')
+				.selectAll('li')
+				.data(data.rows)
+				.enter()
+				.append('li')
+				.text(d => {
+					// Convert timestamp format
+					let ts = formatTime(new Date(d.timestamp));
+					return `${d.tablename} refreshed on ${ts}.`;
+				})
+		})
+		.catch(e => console.log(e));
 }
 
 function drawLines(linesObj, data) {
