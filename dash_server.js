@@ -14,7 +14,7 @@ const logger = createLogger({
     ),
   defaultMeta: {service: 'user-service'},
   transports: [
-    new transports.File({ filename: '.logs/dash_server.log', 
+    new transports.File({ filename: './logs/dash_server.log', 
     	level: 'error',
     	timestamp: true })  ]
 });

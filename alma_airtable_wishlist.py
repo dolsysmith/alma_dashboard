@@ -367,6 +367,11 @@ def fetch_new_orders(wishlist_funds_table, orders_url, allocations_url, headers)
                                           params)
         if wishlist_orders_table.empty:
             raise AssertionError('Error fetching orders from Airtable.')
+        # Airtable does not return any fields that are empty. If the data lacks fields used by the dashboard query, add them to the postgres table
+        for field in config['airtable']['wishlist_orders_req_fields']:
+            if field not in wishlist_orders_table.columns:
+                wishlist_orders_table[field] = ''
+
         # Drop the license column, because it contains nested data
         wishlist_orders_table = wishlist_orders_table.drop('license', axis=1)    
         # Get the allocations for these orders

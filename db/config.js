@@ -41,8 +41,8 @@ module.exports = {
                                     end)
                               when array_length(invoice_lines.id, 1) is null
                               then 'No Invoice'
-                              else 'Multiple'
-                          end) as invoice_status,
+                              else 'Multiple Invoices'
+                          end) as order_status,
                           expenditures.exp_fund_names <> encumbrances.enc_fund_names as funds_mismatch
                       from
                           pol_table
@@ -85,10 +85,11 @@ module.exports = {
                           null as exp_fund_names,
                           null as exp_fund_codes,
                           null expenditure_amount,
-                          'Not Yet Ordered' as invoice_status,
+                          json_build_object('negotiation_status', negotiation_status,
+                                            'license_review_status', license_review_status) as order_status,
                           null as funds_mismatch
                        from wishlist_orders_table
-                       group by resource_title, order_id`,
+                       group by resource_title, order_id, negotiation_status, license_review_status`,
 	      "funds_query": `
             select 
               funds_table.balance_available as alma_balance_available,

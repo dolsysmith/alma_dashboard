@@ -15,7 +15,7 @@ const ordersColumnMap = new Map([['Order Type', 'order_type'],
 						['Fund Code', 'enc_fund_codes'],
 						['Amount Projected / Proposed', 'encumbrance_amount'],
 						['Amount Spent', 'expenditure_amount'],
-						['Invoice Status', 'invoice_status']]);
+						['Invoice Status', 'order_status']]);
 
 const fundsColumnMap = new Map([['Ledger', 'ledger_name'],
 								['Fund Name', 'fund_ledger_name'],
