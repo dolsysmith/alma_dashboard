@@ -15,7 +15,7 @@ const ordersColumnMap = new Map([['Order Type', 'order_type'],
 						['Fund Code', 'enc_fund_codes'],
 						['Amount Projected / Proposed', 'encumbrance_amount'],
 						['Amount Spent', 'expenditure_amount'],
-						['Invoice Status', 'order_status']]);
+						['Order Status', 'order_status']]);
 
 const fundsColumnMap = new Map([['Ledger', 'ledger_name'],
 								['Fund Name', 'fund_ledger_name'],
@@ -59,7 +59,62 @@ const valueFunctions = {actual: (d) => d.total_alloc - d.daily_exp,
 						proposed: (d) => d.total_alloc - (d.daily_exp + d.daily_enc + d.wishlist_proposed)
 					};
 // d3 time formatting utility, for use with data refresh timestamps
-const formatTime = d3.timeFormat('%B %d, %Y');
+const formatTime = d3.timeFormat('%m-%d-%Y');
+
+function fundsOnOrdersRenderer (instance, td, row, col, prop, value, cellProperties) {
+/* Custom renderer for handling multiple elements in the funds columns of the order table.*/
+	if (value == null) return td;
+	// Join array elements together 
+	Handsontable.dom.empty(td);
+	td.textContent = value.join(' || ');
+	return td;
+}
+
+function orderStatusRenderer (instance, td, row, col, prop, value, cellProperties) {
+/* Custom renderer for inserting HTML into the order status column.*/
+	// Labels for wishlist status keys
+	const statusLabelMap = {negotiation_status: 'Negotiation',
+					license_review_status: 'License Review'};
+	// Array of new elements to append to the table cell
+	let elements = [];
+	// Case when we have one or more invoice statuses
+	if (Array.isArray(value)) {
+		let element = document.createElement('p');
+		if (value.length > 1) element.textContent = 'Multiple';
+		else element.textContent = value[0];
+		elements.push(element);
+	}
+	// Case when there's no status
+	else if (value == null) {
+		let element = document.createElement('p');
+		element.textContent = 'Not yet invoiced';
+		elements.push(element);
+	}
+	// Case: wishlist status (negotiation & license)
+	else {
+		elements = Object.keys(value).map(statusKey => {
+						// 2 statuses -- place them together in a <div>, with header text for each
+						let element = document.createElement('div'),
+							labelElement = document.createElement('p'),
+						 	valueElement = document.createElement('p');
+						// add class for formatting background
+						element.className += statusKey; 
+						labelElement.textContent = statusLabelMap[statusKey];
+						// Add header class for formatting
+						labelElement.className += statusKey;
+						// Text class for formatting
+						valueElement.className += 'order_status_text';
+						valueElement.textContent = value[statusKey];
+						element.append(labelElement, valueElement);
+						return element;
+					});
+	}
+	Handsontable.dom.empty(td);
+	td.append(...elements);
+	return td;
+
+
+}
 
 function populateTable(data, props) {
 	/* Sets up a handsontable instance. Code below is mostly boilerplate. */
@@ -84,6 +139,25 @@ function populateTable(data, props) {
      					 numericFormat: {
        						 pattern: '$0,0.00'}
        					}
+			}
+			// Handles date columns
+			else if (column.endsWith('date')) {
+				return {data: column,
+						editor: false,
+						type: 'date',
+						dateFormat: 'MM-DD-YYYY'};
+			}
+			else if (column.endsWith('status')) {
+				return {data: column,
+						editor: false,
+						renderer: orderStatusRenderer
+					};
+			}
+			else if (column.startsWith('enc_fund')) {
+				return {data: column,
+						editor: false,
+						renderer: fundsOnOrdersRenderer
+					};
 			}
 			return {data: column,
 					editor: false}
@@ -126,19 +200,15 @@ function populateTable(data, props) {
 }
 
 function cleanData(data) {
-	/* handsontable doesn't handle arrays within cells. This function will concatenate them into strings for display.
-	Additionally, formats dates and currency.*/
+	/* Converts date strings to JS datetime objects. */
 	data.rows = data.rows.map(row => {
 		for (let key of Object.keys(row)) {
-			if (Array.isArray(row[key])) {
-				row[key] = row[key].join(' || ')
+			// only for date columns with values --> ignore nulls
+			if (key.endsWith('date') && (row[key] != null)) {
+				let dt = new Date(Date.parse(row[key]));
+				// apply d3 formatting function
+				row[key] = formatTime(dt);
 			}
-			// Convert date strings to valid dates in Javascript
-			// toISOString puts the year first -- better for sorting -- but then we need to remove the timestamp
-			else if (key.endsWith('date') && (row[key] != null)) {
-				row[key] = new Date(Date.parse(row[key])).toISOString().split('T')[0];
-			}
-
 		}
 		return row;
 	});
@@ -153,9 +223,9 @@ function fetchTableData(props) {
 			/* data will be an object with two properties, 'rows' and 'cols'. 
 			data.rows is an array of objects, where each property is a column name. 
 			data.columns is an array of objects, in which the 'name' property gives the name of a column. */
-			data = cleanData(data);
+			// We need to do additional cleaning of the orders data
+			if (props.endPoint == 'orders-data') data = cleanData(data);
 			let table = populateTable(data, props);
-			console.log(data)
 			return table;
 		})
 		.catch(e => console.log(e));

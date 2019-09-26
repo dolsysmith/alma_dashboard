@@ -32,17 +32,7 @@ module.exports = {
                           expenditures.exp_fund_names,
                           expenditures.exp_fund_codes,
                           expenditures.expenditure_amount,
-                          (case 
-                              when array_length(invoice_lines.id, 1) = 1 
-                              then (case 
-                                      when invoice_lines.invoice_paid[1] = 'PAID'
-                                      then 'Paid'
-                                      else 'Received'
-                                    end)
-                              when array_length(invoice_lines.id, 1) is null
-                              then 'No Invoice'
-                              else 'Multiple Invoices'
-                          end) as order_status,
+                          array_to_json(invoice_lines.invoice_paid) as order_status,
                           expenditures.exp_fund_names <> encumbrances.enc_fund_names as funds_mismatch
                       from
                           pol_table
@@ -73,7 +63,7 @@ module.exports = {
                           where invoice_line_unique_identifier <> ':'
                           group by po_line_reference) as invoice_lines 
                           on pol_table.po_line_reference = invoice_lines.po_line_reference
-                      union
+                      union all
                       select 'Wishlist' as order_type, 
                           concat(cast(order_id as text), '-wishlist') as po_line_reference,
                           resource_title as title,
