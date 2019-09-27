@@ -23,6 +23,12 @@ const fundsColumnMap = new Map([['Ledger', 'ledger_name'],
 						        ['Balance Available', 'alma_balance_available'],
 						        ['Wishlist Balance Available', 'wishlist_balance_available']]);
 
+//Object for mapping order statuses to text for the UI
+const orderStatusMap = {nullInvoice: 'Not Yet Invoiced',
+				   		multipleInvoices: 'Multiple',
+				   		negotiationStatus: 'In Negotiation',
+				   		licenseStatus: 'In License Review'}
+
 // Defines properties for each table
 const tableProps = [{endPoint: 'funds-data',  // server endpoint to retrieve data
 						elementId: 'funds-table', // HTML ID of container
@@ -61,59 +67,22 @@ const valueFunctions = {actual: (d) => d.total_alloc - d.daily_exp,
 // d3 time formatting utility, for use with data refresh timestamps
 const formatTime = d3.timeFormat('%m-%d-%Y');
 
-function fundsOnOrdersRenderer (instance, td, row, col, prop, value, cellProperties) {
-/* Custom renderer for handling multiple elements in the funds columns of the order table.*/
-	if (value == null) return td;
-	// Join array elements together 
-	Handsontable.dom.empty(td);
-	td.textContent = value.join(' || ');
-	return td;
-}
-
 function orderStatusRenderer (instance, td, row, col, prop, value, cellProperties) {
-/* Custom renderer for inserting HTML into the order status column.*/
-	// Labels for wishlist status keys
-	const statusLabelMap = {negotiation_status: 'Negotiation',
-					license_review_status: 'License Review'};
-	// Array of new elements to append to the table cell
-	let elements = [];
-	// Case when we have one or more invoice statuses
-	if (Array.isArray(value)) {
-		let element = document.createElement('p');
-		if (value.length > 1) element.textContent = 'Multiple';
-		else element.textContent = value[0];
-		elements.push(element);
-	}
-	// Case when there's no status
-	else if (value == null) {
-		let element = document.createElement('p');
-		element.textContent = 'Not yet invoiced';
-		elements.push(element);
-	}
-	// Case: wishlist status (negotiation & license)
-	else {
-		elements = Object.keys(value).map(statusKey => {
-						// 2 statuses -- place them together in a <div>, with header text for each
-						let element = document.createElement('div'),
-							labelElement = document.createElement('p'),
-						 	valueElement = document.createElement('p');
-						// add class for formatting background
-						element.className += statusKey; 
-						labelElement.textContent = statusLabelMap[statusKey];
-						// Add header class for formatting
-						labelElement.className += statusKey;
-						// Text class for formatting
-						valueElement.className += 'order_status_text';
-						valueElement.textContent = value[statusKey];
-						element.append(labelElement, valueElement);
-						return element;
-					});
-	}
+/*Custom renderer for inserting HTML into the order status column.*/
+	let element = document.createElement('div');
+	// Set background color based on status, mapping to Bootstrap contextual backgrounds
+	let bgColor;
+	if (value == orderStatusMap.nullInvoice) bgColor = 'primary';
+	else if (value == orderStatusMap.negotiationStatus) bgColor = 'warning';
+	else if (value == orderStatusMap.licenseStatus) bgColor = 'info';
+	else if (value == orderStatusMap.multipleInvoices) bgColor = 'danger';
+	else bgColor = 'success';
+	element.textContent = value;
+	element.className = `alert alert-${bgColor}`;
+	element.setAttribute('role', 'alert');
 	Handsontable.dom.empty(td);
-	td.append(...elements);
+	td.append(element);
 	return td;
-
-
 }
 
 function populateTable(data, props) {
@@ -127,6 +96,7 @@ function populateTable(data, props) {
 		manualColumnResize: true,
 		manualRowResize: true,
 		rowHeaders: true,
+		copyPaste:true,
 		// Need to use the spread operator to convert the Map iterable to an array
 		colHeaders: [...props.columnMap.keys()],
 		// Map function to reassign db keys to more readable column names
@@ -151,12 +121,6 @@ function populateTable(data, props) {
 				return {data: column,
 						editor: false,
 						renderer: orderStatusRenderer
-					};
-			}
-			else if (column.startsWith('enc_fund')) {
-				return {data: column,
-						editor: false,
-						renderer: fundsOnOrdersRenderer
 					};
 			}
 			return {data: column,
@@ -200,7 +164,7 @@ function populateTable(data, props) {
 }
 
 function cleanData(data) {
-	/* Converts date strings to JS datetime objects. */
+	/* Converts arrays to strings and date strings to JS datetime objects. */
 	data.rows = data.rows.map(row => {
 		for (let key of Object.keys(row)) {
 			// only for date columns with values --> ignore nulls
@@ -208,6 +172,23 @@ function cleanData(data) {
 				let dt = new Date(Date.parse(row[key]));
 				// apply d3 formatting function
 				row[key] = formatTime(dt);
+			}
+			else if (Array.isArray(row[key])) {
+				// Case: it's an invoice status
+				if (key == 'order_status') {
+					if (row[key].length > 1) row[key] = orderStatusMap.multipleInvoices;  // Multiple invoices
+					else row[key] = row[key][0]; // single invoice status
+				}
+				// For arrays of funds, we need to convert to strings for filtering purposes
+				// Use a delimiter to show multiple values		
+				else row[key] = row[key].join(' || ');
+			}
+			// No invoice data
+			else if ((row[key] === null) && (key == 'order_status')) row[key] = orderStatusMap.nullInvoice;
+			// It will be a JSON object if it's for wishlist status, because we have two values to keep track of
+			else if ((typeof row[key] == 'object') && (row[key] != null)) {
+				if (!row[key].license_review_status) row[key] = orderStatusMap.negotiationStatus;
+				else row[key] = orderStatusMap.licenseStatus;
 			}
 		}
 		return row;

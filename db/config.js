@@ -27,10 +27,10 @@ module.exports = {
                           pol_table.renewal_date,
                           pol_table.vendor_code,
                           encumbrances.enc_fund_names,
-                          encumbrances.enc_fund_codes,
+                          encumbrances.enc_fund_codes, 
                           encumbrances.encumbrance_amount,
-                          expenditures.exp_fund_names,
-                          expenditures.exp_fund_codes,
+                          expenditures.exp_fund_names, 
+                          expenditures.exp_fund_codes, 
                           expenditures.expenditure_amount,
                           array_to_json(invoice_lines.invoice_paid) as order_status,
                           expenditures.exp_fund_names <> encumbrances.enc_fund_names as funds_mismatch

@@ -52,8 +52,3 @@
   				max-width: 150;
   				vertical-align: bottom;/* enter here your max header width */
 			}
-			p.negotiation_status, p.license_review_status  {
-				font-size: 10pt;
-				font-weight: bold;
-				margin-bottom: 0;
-			}
