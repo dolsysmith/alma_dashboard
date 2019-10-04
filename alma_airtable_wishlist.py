@@ -169,17 +169,27 @@ def compute_balance_available(df):
     return df.merge(balance_table, left_on='fund_ledger_code',
                                     right_on='code').drop('code', axis=1)
 
-def normalize_dates(df, fiscal_year_start, date_column):
-    '''Given a DataFrame, a fiscal year start date, and a date column, normalizes those dates that fall before the start of the current fiscal year to dates in the current year.
+def normalize_dates(df, fiscal_year_start, last_valid_renewal, date_column):
+    '''Given a DataFrame, a fiscal year start date, a last valid date, and a date column, normalizes those dates that fall outside the date range to dates in the current year.
     Dates are normalized by adding a year.'''
+    fiscal_year_start = pd.to_datetime(fiscal_year_start)
+    last_valid_renewal = pd.to_datetime(last_valid_renewal)
+    def calculate_offset(row, date_column):
+        '''Helper function for pandas apply. Leaves valid dates alone; ignores null dates; calculates the offset for the rest.'''
+        if not row[date_column]:
+            return row
+        if (row[date_column] >= fiscal_year_start) and (row[date_column] <= last_valid_renewal):
+            return row
+        row[date_column] = row[date_column] + row.offsets
+        return row
     # Get the (fiscal) year for the current fiscal year start date
     fiscal_year = pd.to_datetime(fiscal_year_start).to_period('A-JUN').year
     # Calculate the difference between the current fiscal year and the fiscal year of the dates in date_column
     df['fiscal_year_delta'] = fiscal_year - df[date_column].dt.to_period('A-JUN').dt.year
     # Create a temporary column to hold the pandas offset objects -- used to calculate the delta between years
-    df['offsets'] = df.fiscal_year_delta.apply(lambda x: pd.offsets.DateOffset(years=x) if x > 0 else pd.offsets.DateOffset(years=0))
+    df['offsets'] = df.fiscal_year_delta.apply(lambda x: pd.offsets.DateOffset(years=x) if x != 0 else pd.offsets.DateOffset(years=0))
     # Recalculate the date_column, using the offset 
-    df[date_column] = df[date_column] + df.offsets
+    df = df.apply(calculate_offset, axis=1, args=(date_column,))
     return df.drop(['offsets', 'fiscal_year_delta'], axis=1)
 
 def fetch_analytics_data():
@@ -220,7 +230,8 @@ def fetch_analytics_data():
         # For the table of POL's normalize the renewal dates
         reports['pol_table'] = normalize_dates(reports['pol_table'].copy(), 
                                        config['fiscal_period']['start_date'],
-                                               'renewal_date')
+                                       config['fiscal_period']['last_valid_renewal'],
+                                        'renewal_date')
     return reports
 
 def load_analytics_data(reports):

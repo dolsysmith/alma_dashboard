@@ -3,6 +3,8 @@ Provides tabular and graphical views of current, projected, and proposed spendin
 Uses d3.js for rendering a "burndown" chart (rolling expenditures to date, plus projections).
 Uses handsontable.js for rendering the data in chart form, in addition to an itemized list of orders.
 */
+// for handsontable columns
+const colWidths = 150;
 
 // columns for display, mapped to columns returned from the database query
 // using the Map structure because iteration preserves insertion order
@@ -34,7 +36,8 @@ const tableProps = [{endPoint: 'funds-data',  // server endpoint to retrieve dat
 						elementId: 'funds-table', // HTML ID of container
 						columnMap: fundsColumnMap, // mapping db columns to table view
 						renderAllRows: false, // turn off for better performance
-						width: 800, 		// need to set both width and height -- if height is not set, table is rendered to fill the browser window
+						// need to set both width and height -- if height is not set, table is rendered to fill the browser window
+						width: colWidths * (fundsColumnMap.size - 1) + 75,	// one column is hidden; add constant for row index 
 						height: 400,
 						hiddenColumns: {columns: [2]}, // hiding the fund code column, which is the key we use for db queries
 						hooks: {afterSelectionEndByProp: fundSelectionListener} // listens for the user's selection of a cell on the table
@@ -43,7 +46,7 @@ const tableProps = [{endPoint: 'funds-data',  // server endpoint to retrieve dat
 						elementId: 'orders-table',
 						columnMap: ordersColumnMap,
 						renderAllRows: false, 
-						width: 1200,
+						width: colWidths * ordersColumnMap.size + 75, // add 100 for row index 
 						height: 400
 					}];
 // Properties for the burndown chart
@@ -127,7 +130,7 @@ function populateTable(data, props) {
 					editor: false}
 		}),
 		hiddenColumns: props.hiddenColumns,
-		colWidths: 150, // TO DO: make some columns smaller
+		colWidths: colWidths, // TO DO: make some columns smaller
 		columnSorting: true,
 		filters: true,
 		dropdownMenu: ['filter_by_value', 'filter_action_bar'], 		// limit the options in the column drop-down to the filter functions
