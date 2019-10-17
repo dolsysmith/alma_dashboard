@@ -4,6 +4,7 @@ var express = require('express'),
 	config = require('./db/config.js'),
 	{ Pool } = require('pg'),
 	pool = new Pool(config.pg_credentials),
+	types = require('pg').types,
 	{ createLogger, format, transports } = require('winston');
 
 const logger = createLogger({
@@ -23,6 +24,9 @@ const logger = createLogger({
 const burndownQueryTypes = {'all-funds': 'all_funds_bd_query',
 							'single-fund': 'single_fund_bd_query',
 							'single-ledger': 'single_ledger_bd_query'};
+
+// Use the type parser to cast integers returned by postgres to floats -- otherwise, Node seems to convert these to strings
+types.setTypeParser(1700, val => parseFloat(val));
 
 async function getTable (query, params=null) {
 	/* Runs a static query against the PG database.*/
@@ -81,7 +85,6 @@ app.get('/burndown-data', async (req, res) => {
 	if (Object.keys(burndownQueryTypes).includes(queryType)) {
 		if (queryType == 'all-funds') {
 			data = await getTable(config.queries[burndownQueryTypes[queryType]]);
-
 		}
 		else {
 			params = (req.query.fundCode)? req.query.fundCode : req.query.ledger;

@@ -384,7 +384,8 @@ def fetch_new_orders(wishlist_funds_table, orders_url, allocations_url, headers)
                 wishlist_orders_table[field] = ''
 
         # Drop the license column, because it contains nested data
-        wishlist_orders_table = wishlist_orders_table.drop('license', axis=1)    
+        if 'license' in wishlist_orders_table.columns:
+            wishlist_orders_table = wishlist_orders_table.drop('license', axis=1)    
         # Get the allocations for these orders
         params = {}
         wishlist_allocations_table = get_airtable_rows(allocations_url,

@@ -427,7 +427,6 @@ function initChart(chartProps, tableMap) {
 	chartProps is defined as a global object.*/
 	fetchChartData('all-funds').then(data => {
 		// Get the the burndown data for all funds and ledgers. 
-
 		// Extract the date range from the ordered query results
 		chartProps.dateRange = [new Date(data.rows[0].day), 
 								new Date(data.rows[data.rows.length-1].day)];
