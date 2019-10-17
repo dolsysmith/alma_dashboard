@@ -118,7 +118,10 @@ function populateTable(data, props) {
 				return {data: column,
 						editor: false,
 						type: 'date',
-						dateFormat: 'MM-DD-YYYY'};
+						dateFormat: 'MM-DD-YYYY',
+						correctFormat: true,
+						
+					};
 			}
 			else if (column.endsWith('status')) {
 				return {data: column,
@@ -133,7 +136,9 @@ function populateTable(data, props) {
 		colWidths: colWidths, // TO DO: make some columns smaller
 		columnSorting: true,
 		filters: true,
-		dropdownMenu: ['filter_by_value', 'filter_action_bar'], 		// limit the options in the column drop-down to the filter functions
+		dropdownMenu: ['filter_by_value', 
+					'filter_by_condition',	// Works for limiting dates to a range, as long as they entered in the correct format
+					'filter_action_bar'], 		// limit the options in the column drop-down to the filter functions
 		licenseKey: 'non-commercial-and-evaluation' // necessary when using the free version of handsontable
 	});
 

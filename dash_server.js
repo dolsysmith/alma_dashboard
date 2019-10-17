@@ -48,6 +48,10 @@ app.use('/d3', express.static(__dirname + '/node_modules/d3/dist'));
 app.use('/bootstrap-css', express.static(__dirname + '/node_modules/bootstrap/dist/css'));
 app.use('/bootstrap-js', express.static(__dirname + '/node_modules/bootstrap/dist/js'));
 app.use('/jquery', express.static(__dirname + '/node_modules/jquery/dist'));
+app.use('/pikaday-js', express.static(__dirname + '/node_modules/pikaday'));
+app.use('/pikaday-css', express.static(__dirname + '/node_modules/pikaday/css'));
+app.use('/pikaday-js', express.static(__dirname + '/node_modules/pikaday'));
+app.use('/moment', express.static(__dirname + '/node_modules/moment/min'));
 
 app.get('/test', async (req, res) => {
 	let data = await getTable(config.queries.orders_query);
