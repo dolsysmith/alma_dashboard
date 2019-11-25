@@ -157,17 +157,18 @@ def get_alma_funds():
         return pd.DataFrame()
 
 # Don't use while Analytics bug prohibits accurate encumbrance reporting
-#def compute_balance_available(df):
-#    '''Computes remaining balance, using Alma Analytics columns.'''
-#    df['balance_available'] = df.transaction_allocation_amount - (df.transaction_encumbrance_amount + df.transaction_expenditure_amount)
-#    return df
 def compute_balance_available(df):
+    '''Computes remaining balance, using Alma Analytics columns.'''
+    df['balance_available'] = df.transaction_allocation_amount - (df.transaction_encumbrance_amount + df.transaction_expenditure_amount)
+    return df
+# Doesn't return the balance for funds in the negative? For some reason, doesn't return the OnlineSubs fund
+#def compute_balance_available(df):
     '''Add balance available column to fund table from Analytics, fetching the balance from the Alma API.'''
-    balance_table = get_alma_funds()
-    if balance_table.empty:
-        raise AssertionError('Could not fetch updated balance from Alma. Funds table will not be updated.') 
-    return df.merge(balance_table, left_on='fund_ledger_code',
-                                    right_on='code').drop('code', axis=1)
+#    balance_table = get_alma_funds()
+#    if balance_table.empty:
+#        raise AssertionError('Could not fetch updated balance from Alma. Funds table will not be updated.') 
+#    return df.merge(balance_table, left_on='fund_ledger_code',
+ #                                   right_on='code').drop('code', axis=1)
 
 def normalize_dates(df, fiscal_year_start, last_valid_renewal, date_column):
     '''Given a DataFrame, a fiscal year start date, a last valid date, and a date column, normalizes those dates that fall outside the date range to dates in the current year.
@@ -453,12 +454,24 @@ def do_airtable_updates(reports, init=False):
             update_at_funds_query = f.read()         
         try:
             funds_to_update = pd.read_sql(update_at_funds_query, engine)
-            # If the funds table doesn't exist locally, get it from Airtable first
+            # If the Airtable funds table doesn't exist locally, get it from Airtable first
+            # This approach can also be used when adding new funds to Airtable after the initial load. Steps:
+            # 1. Add the new fund, including fund code, to Airtable
+            # 2. Run DROP TABLE airtable_funds in the alma_dashboard SQL database.
+            # 3. Run this script, which fetch the fund codes and ID's from Airtable (including that of the new fund), merge them with the funds from Analytics -- using a LEFT JOIN, so as to include the new fund -- and save that to the SQL database AND update Airtable (so that it reflects the current Alma balance available).
+            # --> TO DO: Include logic so that we can skip the manual DROP TABLE step
         except Exception as e:
             wishlist_log.error('Unable to get Airtable funds stored locally. Fetching remote.')
+            
             funds_to_update = get_airtable_rows(AT_URL.format(table_name='funds_available'),
                                                 GET_HEADERS,
                                                 params={})
+            funds_to_update = funds_to_update[['fund_ledger_code', 'id']]
+            local_alma_funds = pd.read_sql('''select balance_available as alma_balance_available, fund_ledger_code
+                                            from funds_table''', engine)
+            funds_to_update = local_alma_funds.merge(funds_to_update, 
+                                    how='right',
+                                    on='fund_ledger_code')
         # Update these funds on Airtable
         # TO DO: don't hard code column names
         airtable_funds = update_airtable(funds_to_update[['id', 'alma_balance_available']], 

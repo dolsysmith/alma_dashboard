@@ -157,6 +157,7 @@ function populateTable(data, props) {
 	//configure the export-to-CSV function
 	downButton.addEventListener('click', function() {
     	exportPlugin1.downloadFile('csv', {
+      		//exportHiddenRows: true,
       		bom: false,
       		columnDelimiter: ',',
       		columnHeaders: false,
