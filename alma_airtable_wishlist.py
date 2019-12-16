@@ -395,6 +395,8 @@ def fetch_new_orders(wishlist_funds_table, orders_url, allocations_url, headers)
         if wishlist_allocations_table.empty:
             raise AssertionError('Error fetching order allocations from Airtable')
         # First, unroll the lists containing the order ids and fund ids --- these should each have only a single value, since each row corresponds to one allocation
+        # This table may have blank rows -- need to drop these
+        wishlist_allocations_table = wishlist_allocations_table.loc[~wishlist_allocations_table.order_id.isnull() & ~wishlist_allocations_table.fund_to_allocate.isnull()].copy()
         wishlist_allocations_table.order_id = wishlist_allocations_table.order_id.apply(lambda x: x[0])
         wishlist_allocations_table.fund_to_allocate = wishlist_allocations_table.fund_to_allocate.apply(lambda x: x[0])
         # Merge on the table of funds
